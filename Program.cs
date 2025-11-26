@@ -1,5 +1,4 @@
 
-using Microsoft.AspNetCore.Builder;
 using Microsoft.OpenApi;
 using System.Reflection;
 
@@ -11,7 +10,13 @@ namespace jcAP.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Logging.ClearProviders();
+            builder.Logging.AddConsole();
+            builder.Logging.AddDebug();
+
             builder.Services.AddControllers();
+
+            builder.Services.AddHealthChecks();
 
             builder.Services.AddOpenApi();
 
