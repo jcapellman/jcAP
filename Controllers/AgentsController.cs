@@ -5,6 +5,10 @@ namespace jcAP.API.Controllers
 {
     public class AgentsController : BaseController
     {
+        public AgentsController(ILogger<BaseController> logger) : base(logger)
+        {
+        }
+
         /// <summary>
         /// Returns a list of Agents
         /// </summary>

@@ -5,6 +5,10 @@ namespace jcAP.Api.Controllers
 {
     public class SessionController : BaseController
     {
+        public SessionController(ILogger<BaseController> logger) : base(logger)
+        {
+        }
+
         /// <summary>
         /// Start a new session for an agent (async). Returns 202 with session id and Location header.
         /// </summary>

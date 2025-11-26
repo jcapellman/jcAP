@@ -7,6 +7,10 @@ namespace jcAP.API.Controllers
 
     public class ToolsController : BaseController
     {
+        public ToolsController(ILogger<BaseController> logger) : base(logger)
+        {
+        }
+
         /// <summary>
         /// Returns a list of Tools (Name, Status and Capabilities)
         /// </summary>
