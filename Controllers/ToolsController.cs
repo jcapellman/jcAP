@@ -1,5 +1,5 @@
 using jcAP.API.Controllers.Base;
-using jcAP.API.Objects;
+using jcAP.API.Objects.Tools;
 using Microsoft.AspNetCore.Mvc;
 
 namespace jcAP.API.Controllers
@@ -45,9 +45,9 @@ namespace jcAP.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id}")]
-        public ToolsResponseItem Get(Guid id)
+        public ToolDto Get(Guid id)
         {
-            return new ToolsResponseItem();
+            return new ToolDto();
         }
 
         /// <summary>
