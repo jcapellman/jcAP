@@ -1,4 +1,6 @@
 
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi;
 using System.Reflection;
 
@@ -15,7 +17,7 @@ namespace jcAP.API
             builder.Logging.AddDebug();
 
             builder.Services.AddControllers();
-
+            builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddHealthChecks();
 
             builder.Services.AddOpenApi();
@@ -32,6 +34,10 @@ namespace jcAP.API
                 }
             });
 
+            builder.Services.Configure<ForwardedHeadersOptions>(opts =>
+            {
+                opts.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            });
 
             builder.Services.Configure<Microsoft.AspNetCore.Routing.RouteOptions>(opts =>
             {
@@ -43,16 +49,28 @@ namespace jcAP.API
 
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
+                app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "jcAP v1");
+                });
+            }
+            else
+            {
+                app.UseExceptionHandler("/error");
+                app.UseHsts();
             }
 
             app.UseHttpsRedirection();
 
+            app.UseRouting();
+
             app.UseAuthorization();
-            app.UseSwagger();
-            app.UseSwaggerUI(options =>
+
+            app.MapHealthChecks("/health", new HealthCheckOptions
             {
-                options.SwaggerEndpoint("v1/swagger.json", "2025.11.0");
+                Predicate = _ => true
             });
 
             app.MapControllers();
