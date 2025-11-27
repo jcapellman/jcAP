@@ -5,7 +5,7 @@ namespace jcAP.Api.Controllers
 {
     public class SessionController : BaseController
     {
-        public SessionController(ILogger<BaseController> logger) : base(logger)
+        public SessionController(ILogger<BaseController> logger, IHostEnvironment env) : base(logger, env)
         {
         }
 

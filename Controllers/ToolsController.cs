@@ -7,7 +7,7 @@ namespace jcAP.API.Controllers
 
     public class ToolsController : BaseController
     {
-        public ToolsController(ILogger<BaseController> logger) : base(logger)
+        public ToolsController(ILogger<BaseController> logger, IHostEnvironment env) : base(logger, env)
         {
         }
 
