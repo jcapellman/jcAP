@@ -10,10 +10,12 @@ namespace jcAP.API.Controllers.Base
     public class BaseController : ControllerBase
     {
         protected readonly ILogger<BaseController> Logger;
+        protected readonly IHostEnvironment _env;
 
-        public BaseController(ILogger<BaseController> logger)
+        public BaseController(ILogger<BaseController> logger, IHostEnvironment env)
         {
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _env = env;
         }
 
         // Standardized success response envelope
