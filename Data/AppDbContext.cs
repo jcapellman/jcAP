@@ -1,0 +1,17 @@
+using Microsoft.EntityFrameworkCore;
+using jcAP.API.Entities;
+
+namespace jcAP.API.Data
+{
+    public class AppDbContext : DbContext
+    {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+        public DbSet<ToolEntity> Tools { get; set; } = null!;
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+        }
+    }
+}
