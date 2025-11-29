@@ -1,7 +1,9 @@
+using jcAP.API.Repositories;
 
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi;
+
 using System.Reflection;
 
 namespace jcAP.API
@@ -44,6 +46,8 @@ namespace jcAP.API
                 opts.LowercaseUrls = true;
                 opts.LowercaseQueryStrings = false;
             });
+
+            builder.Services.AddScoped<IToolRepository, ToolRepository>();
 
             var app = builder.Build();
 
