@@ -18,9 +18,13 @@ namespace jcAP.API.Controllers.Base
             _env = env;
         }
 
-        // Standardized success response envelope
-        protected ActionResult ApiOk<T>(T data)
-            => Ok(new ApiResponse<T>(true, data, null, null));
+        protected ActionResult ApiOk()
+            => Ok();
+
+        protected ActionResult ApiOk<T>(T? data)
+            => data is null
+                ? Ok()
+                : Ok(new ApiResponse<T>(true, data, null, null));
 
         // Created response with location
         protected ActionResult ApiCreated<T>(string location, T data)
@@ -37,6 +41,7 @@ namespace jcAP.API.Controllers.Base
                 .SelectMany(v => v.Errors)
                 .Select(e => string.IsNullOrWhiteSpace(e.ErrorMessage) ? e.Exception?.Message : e.ErrorMessage)
                 .Where(s => !string.IsNullOrWhiteSpace(s))
+                .OfType<string>()
                 .ToArray();
 
             return BadRequest(new ApiResponse<object>(false, null, "Validation failed", errors));
