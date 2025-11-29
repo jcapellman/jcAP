@@ -13,6 +13,7 @@ namespace jcAP.Api.Controllers
         /// Start a new session for an agent (async). Returns 202 with session id and Location header.
         /// </summary>
         /// <param name="request">Session start payload (agentId, input, budget, pin versions).</param>
+        /// <param name="ct"></param>
         /// <returns>202 Accepted with session id/location.</returns>
         [HttpPost]
         public async Task<IActionResult> StartSession([FromBody] SessionStartRequestDto request, CancellationToken ct = default)
@@ -24,6 +25,7 @@ namespace jcAP.Api.Controllers
         /// Get current session state including budget usage and last step.
         /// </summary>
         /// <param name="sessionId">Session id GUID.</param>
+        /// <param name="ct"></param>
         /// <returns>Session state DTO.</returns>
         [HttpGet("{sessionId:guid}")]
         public async Task<IActionResult> GetSession(Guid sessionId, CancellationToken ct = default)
@@ -36,6 +38,7 @@ namespace jcAP.Api.Controllers
         /// </summary>
         /// <param name="sessionId">Session id to continue.</param>
         /// <param name="stepRequest">Step request containing idempotency key and payload.</param>
+        /// <param name="ct"></param>
         /// <returns>202 Accepted with step id/status.</returns>
         [HttpPost("{sessionId:guid}/steps")]
         public async Task<IActionResult> ContinueSession(Guid sessionId, [FromBody] StepRequestDto stepRequest, CancellationToken ct = default)
@@ -48,6 +51,7 @@ namespace jcAP.Api.Controllers
         /// </summary>
         /// <param name="sessionId">Session id awaiting approval.</param>
         /// <param name="approval">Approval decision and optional notes.</param>
+        /// <param name="ct"></param>
         /// <returns>200 OK with updated session state.</returns>
         [HttpPost("{sessionId:guid}/approve")]
         public async Task<IActionResult> ApproveSession(Guid sessionId, [FromBody] ApprovalRequestDto approval, CancellationToken ct = default)
@@ -59,6 +63,7 @@ namespace jcAP.Api.Controllers
         /// Cancel a running or queued session.
         /// </summary>
         /// <param name="sessionId">Session id to cancel.</param>
+        /// <param name="ct"></param>
         /// <returns>204 No Content on success.</returns>
         [HttpPost("{sessionId:guid}/cancel")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -72,6 +77,7 @@ namespace jcAP.Api.Controllers
         /// Get a replayable trace for a session with per-step artifact references.
         /// </summary>
         /// <param name="sessionId">Session id to fetch trace for.</param>
+        /// <param name="ct"></param>
         /// <returns>Trace DTO with ordered events and artifact refs.</returns>
         [HttpGet("{sessionId:guid}/trace")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -86,6 +92,7 @@ namespace jcAP.Api.Controllers
         /// <param name="agentId">Optional agent id to filter sessions.</param>
         /// <param name="page">Page number (1-based).</param>
         /// <param name="pageSize">Page size.</param>
+        /// <param name="ct"></param>
         /// <returns>Paged list of session summaries.</returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -98,6 +105,7 @@ namespace jcAP.Api.Controllers
         /// Get step status and artifacts for a specific step id.
         /// </summary>
         /// <param name="stepId">Step id GUID.</param>
+        /// <param name="ct"></param>
         /// <returns>Step detail DTO.</returns>
         [HttpGet("steps/{stepId:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -112,6 +120,7 @@ namespace jcAP.Api.Controllers
         /// </summary>
         /// <param name="stepId">Step id to replay.</param>
         /// <param name="replayRequest">Optional parameters controlling replay (force, simulate).</param>
+        /// <param name="ct"></param>
         /// <returns>202 Accepted with new step id or status.</returns>
         [HttpPost("steps/{stepId:guid}/replay")]
         [ProducesResponseType(StatusCodes.Status202Accepted)]
@@ -122,7 +131,6 @@ namespace jcAP.Api.Controllers
         }
     }
 
-    // DTO placeholders
     public record SessionStartRequestDto(Guid AgentId, object? Input, int? BudgetTokens = null, string? PromptVersion = null);
     public record StepRequestDto(string? IdempotencyKey, object? Event);
     public record ApprovalRequestDto(bool Approved, string? ApproverId = null, string? Notes = null);
