@@ -1,18 +1,23 @@
-using jcAP.API.Objects.Tools;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using jcAP.API.Data;
 using jcAP.API.Entities;
-
+using jcAP.API.Objects.Tools;
+using jcAP.API.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace jcAP.API.Repositories
 {
-    public class ToolRepository(AppDbContext db) : IToolRepository
+    public class ToolRepository : EfRepository<ToolEntity>, IToolRepository
     {
-        private readonly AppDbContext _db = db;
+        public ToolRepository(AppDbContext db) : base(db) { }
 
-        public async Task<IEnumerable<ToolDto>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<ToolDto>> GetAllDtosAsync(CancellationToken cancellationToken = default)
         {
-            return await _db.Tools
+            return await _set
                 .AsNoTracking()
                 .Select(e => new ToolDto
                 {
@@ -28,10 +33,11 @@ namespace jcAP.API.Repositories
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<ToolDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<ToolDto?> GetDtoByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            var e = await _db.Tools.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+            var e = await _set.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
             if (e == null) return null;
+
             return new ToolDto
             {
                 Id = e.Id,
@@ -45,7 +51,7 @@ namespace jcAP.API.Repositories
             };
         }
 
-        public async Task<ToolDto> CreateAsync(ToolDto dto, CancellationToken cancellationToken = default)
+        public async Task<ToolDto> CreateFromDtoAsync(ToolDto dto, CancellationToken cancellationToken = default)
         {
             var entity = new ToolEntity
             {
@@ -61,15 +67,15 @@ namespace jcAP.API.Repositories
                 Modified = DateTime.UtcNow
             };
 
-            _db.Tools.Add(entity);
+            await _set.AddAsync(entity, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
 
-            return dto;
+            return dto with { Id = entity.Id };
         }
 
-        public async Task UpdateAsync(Guid id, ToolDto dto, CancellationToken cancellationToken = default)
+        public async Task UpdateFromDtoAsync(Guid id, ToolDto dto, CancellationToken cancellationToken = default)
         {
-            var entity = await _db.Tools.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+            var entity = await _set.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
             if (entity == null) throw new KeyNotFoundException($"Tool {id} not found");
 
             entity.Name = dto.Name;
@@ -81,14 +87,16 @@ namespace jcAP.API.Repositories
             entity.Status = dto.Status;
             entity.Modified = DateTime.UtcNow;
 
+            _set.Update(entity);
             await _db.SaveChangesAsync(cancellationToken);
         }
 
         public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            var entity = await _db.Tools.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+            var entity = await _set.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
             if (entity == null) return;
-            _db.Tools.Remove(entity);
+
+            _set.Remove(entity);
             await _db.SaveChangesAsync(cancellationToken);
         }
     }
