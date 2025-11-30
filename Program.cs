@@ -47,6 +47,7 @@ namespace jcAP.API
                 opts.LowercaseQueryStrings = false;
             });
 
+            builder.Services.AddScoped(typeof(jcAP.API.Repositories.Common.IRepository<>), typeof(jcAP.API.Repositories.Common.EfRepository<>));
             builder.Services.AddScoped<IToolRepository, ToolRepository>();
 
             var app = builder.Build();
