@@ -6,15 +6,9 @@ using jcAP.API.Repositories;
 
 namespace jcAP.API.Controllers
 {
-    public class ToolsController : BaseController
+    public class ToolsController(ILogger<BaseController> logger, IHostEnvironment env, IToolRepository repo) : BaseController(logger, env)
     {
-        private readonly IToolRepository _repo;
-
-        public ToolsController(ILogger<BaseController> logger, IHostEnvironment env, IToolRepository repo)
-            : base(logger, env)
-        {
-            _repo = repo;
-        }
+        private readonly IToolRepository _repo = repo;
 
         /// <summary>
         /// Returns a list of Tools (Name, Status and Capabilities)
@@ -24,7 +18,7 @@ namespace jcAP.API.Controllers
         {
             try
             {
-                var items = await _repo.GetAllAsync(cancellationToken);
+                var items = await _repo.GetAllDtosAsync(cancellationToken);
                 return ApiOk(items);
             }
             catch (Exception ex)
@@ -43,7 +37,7 @@ namespace jcAP.API.Controllers
             if (dto is null) return ApiValidationError(ModelState);
             try
             {
-                var created = await _repo.CreateAsync(dto, cancellationToken);
+                var created = await _repo.CreateFromDtoAsync(dto, cancellationToken);
                 return ApiCreated($"/api/tools/{created.Id}", created);
             }
             catch (Exception ex)
@@ -62,7 +56,7 @@ namespace jcAP.API.Controllers
             if (dto is null) return ApiValidationError(ModelState);
             try
             {
-                await _repo.UpdateAsync(id, dto, cancellationToken);
+                await _repo.UpdateFromDtoAsync(id, dto, cancellationToken);
                 return ApiOk();
             }
             catch (KeyNotFoundException)
@@ -85,7 +79,7 @@ namespace jcAP.API.Controllers
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<ToolDto>> Get(Guid id, CancellationToken cancellationToken)
         {
-            var item = await _repo.GetByIdAsync(id, cancellationToken);
+            var item = await _repo.GetDtoByIdAsync(id, cancellationToken);
             return item is null ? NotFound() : ApiOk(item);
         }
 
@@ -93,8 +87,9 @@ namespace jcAP.API.Controllers
         /// Invokes the Tool
         /// </summary>
         /// <param name="id"></param>
+        /// <param name="cancellationToken"></param>
         [HttpPost("{id:guid}/invoke")]
-        public async Task<ActionResult> Invoke(Guid id)
+        public async Task<ActionResult> Invoke(Guid id, CancellationToken cancellationToken)
         {
             // implementation detail: call other services or queue requests
             return ApiError("Invoke endpoint not implemented", 501);
