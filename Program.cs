@@ -1,10 +1,10 @@
 using jcAP.API.Repositories;
-
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using jcAP.API.Data;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi;
 
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 
 namespace jcAP.API
 {
@@ -14,9 +14,20 @@ namespace jcAP.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Logging.ClearProviders();
-            builder.Logging.AddConsole();
-            builder.Logging.AddDebug();
+            // logging from configuration
+            builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+
+            // EF Core - read connection string from config / env
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                ?? Environment.GetEnvironmentVariable("JCAP__CONNECTIONSTRING")
+                ?? throw new InvalidOperationException("Connection string not configured.");
+
+            builder.Services.AddDbContextPool<AppDbContext>(options =>
+                options.UseNpgsql(connectionString, npgsql =>
+                {
+                    npgsql.EnableRetryOnFailure(3);
+                    npgsql.CommandTimeout(30);
+                }));
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -36,6 +47,11 @@ namespace jcAP.API
                 }
             });
 
+            // register generic and specific repositories
+            builder.Services.AddScoped(typeof(jcAP.API.Repositories.Common.IRepository<>), typeof(jcAP.API.Repositories.Common.EfRepository<>));
+            builder.Services.AddScoped<IToolRepository, ToolRepository>();
+
+            // forwarded headers config
             builder.Services.Configure<ForwardedHeadersOptions>(opts =>
             {
                 opts.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -47,19 +63,17 @@ namespace jcAP.API
                 opts.LowercaseQueryStrings = false;
             });
 
-            builder.Services.AddScoped(typeof(jcAP.API.Repositories.Common.IRepository<>), typeof(jcAP.API.Repositories.Common.EfRepository<>));
-            builder.Services.AddScoped<IToolRepository, ToolRepository>();
-
             var app = builder.Build();
+
+            app.UseForwardedHeaders();
+
+            app.UseMiddleware<ExceptionMiddleware>();
 
             if (app.Environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(options =>
-                {
-                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "jcAP v1");
-                });
+                app.UseSwaggerUI();
             }
             else
             {
@@ -73,11 +87,7 @@ namespace jcAP.API
 
             app.UseAuthorization();
 
-            app.MapHealthChecks("/health", new HealthCheckOptions
-            {
-                Predicate = _ => true
-            });
-
+            app.MapHealthChecks("/health");
             app.MapControllers();
 
             app.Run();
